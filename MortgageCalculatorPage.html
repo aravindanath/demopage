@@ -1,0 +1,209 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mortgage Payment Calculator</title>
+    <style>
+        label {
+            display: block;
+            margin-bottom: 3px;
+        }
+        input[type="number"], select {
+            width: 200px;
+            padding: 5px;
+            margin-bottom: 7px;
+        }
+        input[type="radio"], input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .flex-container {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 5px; 
+        }
+
+        .flex-item {
+            flex: 1;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 20px; 
+			color: green;
+			font-weight: bold;
+        }
+
+        #calculate-button {
+            display: block;
+            margin: 0 auto;
+			margin-bottom: 20px; 
+        }
+
+        #payment-box {
+           text-align: center;
+            border: 2px solid #007BFF; 
+            padding: 10px; 
+            margin-top: 20px; 
+            width: 180px; 
+            margin: 0 auto; 
+        }
+		
+        #monthlyPayment {
+            color: red;
+            font-weight: bold;
+            background-color: lightyellow;
+            padding: 5px; 
+        }
+
+        input[readonly] {
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>ABC Bank Mortgage Payment Calculator</h1>
+<div class="flex-container">    
+    <div class="flex-item" id="basic-information">
+        <h2>Basic Information</h2>
+        <label for="principal">Mortgage principal amount ($):</label>
+        <input type="number" id="principal" step="any" required>
+        
+        <label for="interest-rate">Interest rate (%):</label>
+        <input type="number" id="interest-rate" step="any" required>
+        
+		<label for="loanTerm">Loan Term (Years):</label>
+        <input type="number" id="loanTerm" required>
+		
+        <label for="payment-frequency">Payment frequency:</label>
+        <select id="payment-frequency">
+            <option value="monthly">Monthly</option>
+            <option value="weekly">Bi-Weekly</option>
+            <option value="bi-weekly">Weekly</option>
+        </select>
+
+ </div>   
+    <div class="flex-item" div id="down-payments">
+        <h2>Downpayment Information</h2>
+        <label for="lump-sum-payments">Do you plan on making any downpayments?</label>
+        <input type="radio" name="lump-sum-payments" value="yes"> Yes
+        <input type="radio" name="lump-sum-payments" value="no"> No
+		<label for="downpayment-amount">Downpayment Amount ($):</label>
+		<input type="number" id="downpayment" required>
+		
+    </div>
+</div>    
+    <div id="protect-myself-and-my-home">
+        <h2>Protect Myself and My Home with ABC Bank Credit Protection</h2>
+        <label for="mortgage-life-insurance">Add Mortgage Life Insurance?</label>
+        <input type="radio" name="mortgage-life-insurance" value="yes"> Yes
+        <input type="radio" name="mortgage-life-insurance" value="no"> No
+        
+		<label for="age-of-borrower">Age of Borrower:</label>
+		<input type="number" id="age-of-borrower">
+		<label for="additional-amount">Monthly Premium Amount ($):</label>
+	    <input type="text" id="additional-amount" readonly>
+        
+    </div>
+    
+    <button id="calculate-button">Calculate my payments</button>
+    
+    <div id="result" style="display: none;">
+        <div id="payment-box">
+            <h2 id="payment-heading">Monthly Payment</h2>
+            <p id="monthlyPayment">$0</p>
+        </div>
+    </div>
+	
+    <script>
+        const principalInput = document.getElementById('principal');
+        const interestRateInput = document.getElementById('interest-rate');
+        const loanTermInput = document.getElementById('loanTerm');
+        const paymentFreq = document.getElementById('payment-frequency');
+        const calculateButton = document.getElementById('calculate-button');
+        const resultDiv = document.getElementById('result');
+        const monthlyPaymentSpan = document.getElementById('monthlyPayment');
+        const mortgageLifeInsuranceRadio = document.querySelector('input[name="mortgage-life-insurance"][value="yes"]');
+        const mortgageLifeInsuranceRadioNo = document.querySelector('input[name="mortgage-life-insurance"][value="no"]');
+
+		const ageOfBorrowerInput = document.getElementById('age-of-borrower');
+        const paymentHeading = document.getElementById('payment-heading');
+        const downpaymentRadio = document.querySelector('input[name="lump-sum-payments"][value="yes"]');
+        const downpaymentRadioNo = document.querySelector('input[name="lump-sum-payments"][value="no"]');
+
+		const downpaymentInput = document.getElementById('downpayment');
+        
+		mortgageLifeInsuranceRadio.addEventListener('change', () => {
+            const ageOfBorrowerLabel = document.querySelector('label[for="age-of-borrower"]');
+            ageOfBorrowerLabel.style.display = mortgageLifeInsuranceRadio.checked ? 'block' : 'none';
+        });
+		
+        calculateButton.addEventListener('click', () => {
+            const principal = parseFloat(principalInput.value);
+            const interestRate = parseFloat(interestRateInput.value).toFixed(2);
+            
+            let denominator;
+            let additionalAmtDenominator;
+            if (paymentFreq.value === 'monthly') {
+                denominator = 12;
+                paymentHeading.textContent = 'Monthly Payment';
+                additionalAmtDenominator = 1;
+            } else if (paymentFreq.value === 'bi-weekly') {
+                denominator = 26;
+                paymentHeading.textContent = 'Bi-Weekly Payment';
+                additionalAmtDenominator = 2;
+            } else if (paymentFreq.value === 'weekly') {
+               denominator = 52;
+               paymentHeading.textContent = 'Weekly Payment';
+               additionalAmtDenominator = 4;
+            } 
+            
+			if(principal < 0){
+			 alert('Server error, contact the administrator.');
+			}
+			
+            let additionalAmount = 0;
+            if (mortgageLifeInsuranceRadio.checked) {
+                const ageOfBorrower = parseInt(ageOfBorrowerInput.value);
+                if (ageOfBorrower >= 0 && ageOfBorrower < 40) {
+                    additionalAmount = 100;
+                } else if (ageOfBorrower > 40) {
+                    additionalAmount = 150;
+                }
+            }
+            else if (!mortgageLifeInsuranceRadioNo.checked && !mortgageLifeInsuranceRadio.checked){alert('NullReferenceException: Object reference not set to an instance of an object.');}
+
+            let downpaymentAmt = 0; // Initialize downpayment amount
+            if (downpaymentRadio.checked) {
+                downpaymentAmt = parseFloat(downpaymentInput.value);
+            }
+			else if (!downpaymentRadioNo.checked && !downpaymentRadio.checked){alert('NullReferenceException: Object reference not set to an instance of an object.');}
+            
+            const additionalAmountInput = document.getElementById('additional-amount');
+            additionalAmountInput.value = `$${additionalAmount}`;
+            
+            const loanTerm = parseInt(loanTermInput.value);
+            const monthlyInterestRate = interestRate / (denominator * 100);
+            const totalPayments = loanTerm * denominator;
+
+            let monthlyPayment = ((principal - downpaymentAmt) * monthlyInterestRate) / (1 - Math.pow(1 + monthlyInterestRate, -totalPayments));
+            
+            monthlyPayment += additionalAmount / additionalAmtDenominator;
+            monthlyPaymentSpan.textContent = monthlyPayment.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+
+            resultDiv.style.display = 'block';
+        });
+
+
+    </script>
+</body>
+</html>
